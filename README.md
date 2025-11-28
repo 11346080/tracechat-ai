@@ -137,7 +137,7 @@ trackchat-ai/
 │ ├── types/ # TypeScript 類型
 │ └── package.json # Node 依賴
 ├── docs/ # 文檔
-├── .gitignore # Git 忽略規則 \n
+├── .gitignore # Git 忽略規則
 └── README.md # 本檔案
 
 ## 🔧 開發指南
