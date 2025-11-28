@@ -80,7 +80,7 @@ async function fetchDeletedHistory(sid: string) {
     console.log(`📝 正在載入會話 ${sid} 的刪除歷史...`);
     
     const response = await fetch(
-      `http://localhost:8000/messages/deleted_history/${encodeURIComponent(sid)}`
+      `https://tracechat-ai.onrender.com/messages/deleted_history/${encodeURIComponent(sid)}`
     );
     
     if (!response.ok) {
@@ -103,7 +103,7 @@ async function fetchDeletedHistory(sid: string) {
 
   // 載入會話列表
   useEffect(() => {
-    fetch("http://localhost:8000/sessions")
+    fetch("https://tracechat-ai.onrender.com/sessions")
       .then(res => res.json())
       .then(data => setSessions(data.sessions));
   }, []);
@@ -112,7 +112,7 @@ async function fetchDeletedHistory(sid: string) {
   async function loadHourlyTrend() {
     if (!currentSession) return;
     try {
-      const res = await fetch(`http://localhost:8000/aggregation/hourly_trend/${currentSession}`);
+      const res = await fetch(`https://tracechat-ai.onrender.com/aggregation/hourly_trend/${currentSession}`);
       if (!res.ok) throw new Error(`載入趨勢數據失敗, Status: ${res.status}`);
       const data = await res.json();
       if (!data.hourly_trend) throw new Error("API返回數據結構錯誤，缺少 hourly_trend 鍵");
@@ -146,11 +146,12 @@ async function fetchDeletedHistory(sid: string) {
     // WebSocket 邏輯...
     if (wsRef.current) wsRef.current.close();
     setMessages([]);
+    
     setCheckedMap({});
     setBatchMode(false);
     setIsAITyping(false);
 
-    const ws = new WebSocket(`ws://localhost:8000/ws/chat/${encodeURIComponent(currentSession)}`);
+    const ws = new WebSocket(`wss://tracechat-ai.onrender.com/${encodeURIComponent(currentSession)}`);
     wsRef.current = ws;
     
     ws.onmessage = (e) => {
@@ -182,7 +183,7 @@ async function fetchDeletedHistory(sid: string) {
   async function handleAddSession() {
     if (!newSessionName.trim()) return;
     const sessionName = newSessionName.trim();
-    await fetch("http://localhost:8000/sessions/" + encodeURIComponent(sessionName), { method: "POST" });
+    await fetch("https://tracechat-ai.onrender.com/sessions/" + encodeURIComponent(sessionName), { method: "POST" });
     setNewSessionName("");
     setSessions(prev => [...prev, sessionName]);
     setCurrentSession(sessionName);
@@ -194,7 +195,7 @@ async function fetchDeletedHistory(sid: string) {
     setConfirmOpen(true);
     setHandleConfirm(() =>
       async () => {
-        await fetch(`http://localhost:8000/sessions/${encodeURIComponent(sid)}`, { method: "DELETE" });
+        await fetch(`https://tracechat-ai.onrender.com/sessions/${encodeURIComponent(sid)}`, { method: "DELETE" });
         setSessions(prev => prev.filter(s => s !== sid));
         if (currentSession === sid) setCurrentSession(null);
         setConfirmOpen(false);
@@ -240,7 +241,7 @@ async function fetchDeletedHistory(sid: string) {
           
           // 1. 呼叫後端 API 刪除
           const response = await fetch(
-            "http://localhost:8000/messages/batch_delete",
+            "https://tracechat-ai.onrender.com/messages/batch_delete",
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -312,7 +313,7 @@ async function fetchDeletedHistory(sid: string) {
   function handleSearch() {
     if (!search.trim()) return;
     setSearchAttempted(true);
-    fetch(`http://localhost:8000/search_messages?query=${encodeURIComponent(search)}`)
+    fetch(`https://tracechat-ai.onrender.com/search_messages?query=${encodeURIComponent(search)}`)
       .then(res => res.json())
       .then(res => setSearchResults(res.session_ids || []))
       .catch(() => setSearchResults([])); 
@@ -345,7 +346,7 @@ async function fetchDeletedHistory(sid: string) {
           });
           
           const response = await fetch(
-            "http://localhost:8000/messages/restore",
+            "https://tracechat-ai.onrender.com/messages/restore",
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -428,7 +429,7 @@ async function fetchDeletedHistory(sid: string) {
           
           for (const msg of sortedMsgs) {
             const res = await fetch(
-              "http://localhost:8000/messages/restore",
+              "https://tracechat-ai.onrender.com/messages/restore",
               {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },

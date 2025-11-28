@@ -20,8 +20,8 @@ export type StreamMessage = {
 
 export type DeletedMessage = {
   content: string;
-  deleted_at: number;  // 確保是 number
-  ts: number;          // 確保是 number
+  deleted_at: number;  
+  ts: number;          
   sender?: string;
   session_id?: string;
 };
