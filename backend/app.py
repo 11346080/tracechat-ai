@@ -11,6 +11,22 @@ import asyncio
 from config import settings
 from database.redis_client import close_redis
 
+app = FastAPI()
+
+origins = [
+    "http://localhost:3000",  # 本機開發
+    "https://tracechat-ai.onrender.com",  # 若後端自己要呼叫自己可留
+    "https://tracechat-ai-git-main-11346080s-projects.vercel.app",  # 你現在的 Vercel 前端網址
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Lifespan 管理
 async def startup_logic():
     """啟動邏輯 - 初始化 RediSearch 索引"""
