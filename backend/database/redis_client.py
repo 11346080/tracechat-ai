@@ -11,6 +11,11 @@ redis = Redis.from_url(
     decode_responses=True,
 )
 
+redis_om_conn = get_redis_connection(
+url=settings.REDIS_URL,
+decode_responses=True,
+)
+
 # 異步 Redis 連線
 redis = aioredis.from_url(settings.REDIS_URL)
 
