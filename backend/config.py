@@ -9,9 +9,10 @@ load_dotenv()
 
 class Settings:
     # Redis 配置
-    REDIS_HOST: str = os.getenv("REDIS_HOST", "localhost")
-    REDIS_PORT: int = int(os.getenv("REDIS_PORT", "6380"))
-    REDIS_URL: str = f"redis://{REDIS_HOST}:{REDIS_PORT}"
+    REDIS_URL: str = os.getenv(
+        "REDIS_URL",
+        "redis://localhost:6380" 
+    )
     redis_client = Redis.from_url(REDIS_URL, decode_responses=True)
 
     
