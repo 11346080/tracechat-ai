@@ -3,6 +3,7 @@
 """
 import os
 from dotenv import load_dotenv
+from redis import Redis
 
 load_dotenv()
 
@@ -11,6 +12,9 @@ class Settings:
     REDIS_HOST: str = os.getenv("REDIS_HOST", "localhost")
     REDIS_PORT: int = int(os.getenv("REDIS_PORT", "6380"))
     REDIS_URL: str = f"redis://{REDIS_HOST}:{REDIS_PORT}"
+    redis_client = Redis.from_url(REDIS_URL, decode_responses=True)
+
+    
     
     # Azure OpenAI 配置
     AZURE_OPENAI_ENDPOINT: str = os.getenv("AZURE_OPENAI_ENDPOINT", "https://your-resource-name.openai.azure.com/")

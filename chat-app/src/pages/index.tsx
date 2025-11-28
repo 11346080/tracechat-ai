@@ -161,7 +161,9 @@ async function fetchDeletedHistory(sid: string) {
     setBatchMode(false);
     setIsAITyping(false);
 
-    const ws = new WebSocket(`wss://tracechat-ai.onrender.com/${encodeURIComponent(currentSession)}`);
+    const ws = new WebSocket(
+      `${WS_BASE_URL}/ws/chat/${encodeURIComponent(currentSession)}`
+    );
     wsRef.current = ws;
     
     ws.onmessage = (e) => {
