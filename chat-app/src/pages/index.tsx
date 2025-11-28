@@ -35,6 +35,13 @@ import Sidebar from "../../components/Sidebar";
 import styles from "../styles/Home.module.css";
 
 export default function Home() {
+  const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+
+  const WS_BASE_URL =
+  process.env.NEXT_PUBLIC_WS_BASE_URL ?? "ws://localhost:8000";
+
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const wsRef = useRef<WebSocket | null>(null);
 
@@ -80,7 +87,7 @@ async function fetchDeletedHistory(sid: string) {
     console.log(`📝 正在載入會話 ${sid} 的刪除歷史...`);
     
     const response = await fetch(
-      `https://tracechat-ai.onrender.com/messages/deleted_history/${encodeURIComponent(sid)}`
+  `${API_BASE_URL}/messages/deleted_history/${encodeURIComponent(sid)}`
     );
     
     if (!response.ok) {
@@ -103,7 +110,7 @@ async function fetchDeletedHistory(sid: string) {
 
   // 載入會話列表
   useEffect(() => {
-    fetch("https://tracechat-ai.onrender.com/sessions")
+    fetch(`${API_BASE_URL}/sessions`)
       .then(res => res.json())
       .then(data => setSessions(data.sessions));
   }, []);
@@ -112,7 +119,10 @@ async function fetchDeletedHistory(sid: string) {
   async function loadHourlyTrend() {
     if (!currentSession) return;
     try {
-      const res = await fetch(`https://tracechat-ai.onrender.com/aggregation/hourly_trend/${currentSession}`);
+      const res = await fetch(
+        `${API_BASE_URL}/aggregation/hourly_trend/${currentSession}`
+      );
+
       if (!res.ok) throw new Error(`載入趨勢數據失敗, Status: ${res.status}`);
       const data = await res.json();
       if (!data.hourly_trend) throw new Error("API返回數據結構錯誤，缺少 hourly_trend 鍵");
@@ -183,7 +193,9 @@ async function fetchDeletedHistory(sid: string) {
   async function handleAddSession() {
     if (!newSessionName.trim()) return;
     const sessionName = newSessionName.trim();
-    await fetch("https://tracechat-ai.onrender.com/sessions/" + encodeURIComponent(sessionName), { method: "POST" });
+    await fetch(`${API_BASE_URL}/sessions/${encodeURIComponent(sessionName)}`, {
+      method: "POST",
+    });
     setNewSessionName("");
     setSessions(prev => [...prev, sessionName]);
     setCurrentSession(sessionName);
@@ -195,7 +207,9 @@ async function fetchDeletedHistory(sid: string) {
     setConfirmOpen(true);
     setHandleConfirm(() =>
       async () => {
-        await fetch(`https://tracechat-ai.onrender.com/sessions/${encodeURIComponent(sid)}`, { method: "DELETE" });
+        await fetch(`${API_BASE_URL}/sessions/${encodeURIComponent(sid)}`, {
+          method: "DELETE",
+        });
         setSessions(prev => prev.filter(s => s !== sid));
         if (currentSession === sid) setCurrentSession(null);
         setConfirmOpen(false);
@@ -240,17 +254,11 @@ async function fetchDeletedHistory(sid: string) {
           console.log(`🗑️ 開始批量刪除 ${tsList.length} 條訊息...`);
           
           // 1. 呼叫後端 API 刪除
-          const response = await fetch(
-            "https://tracechat-ai.onrender.com/messages/batch_delete",
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ 
-                session_id: currentSession, 
-                ts_list: tsList 
-              })
-            }
-          );
+          const response = await fetch(`${API_BASE_URL}/messages/batch_delete`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ session_id: currentSession, ts_list: tsList }),
+          });
 
           if (!response.ok) {
             throw new Error(`刪除失敗: HTTP ${response.status}`);
@@ -313,7 +321,9 @@ async function fetchDeletedHistory(sid: string) {
   function handleSearch() {
     if (!search.trim()) return;
     setSearchAttempted(true);
-    fetch(`https://tracechat-ai.onrender.com/search_messages?query=${encodeURIComponent(search)}`)
+    fetch(
+    `${API_BASE_URL}/search_messages?query=${encodeURIComponent(search)}`
+    )
       .then(res => res.json())
       .then(res => setSearchResults(res.session_ids || []))
       .catch(() => setSearchResults([])); 
@@ -345,18 +355,16 @@ async function fetchDeletedHistory(sid: string) {
             deleted_at_type: typeof msg.deleted_at
           });
           
-          const response = await fetch(
-            "https://tracechat-ai.onrender.com/messages/restore",
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                session_id: currentSession,
-                ts_to_restore: Number(msg.ts),     
-                deleted_at: Number(msg.deleted_at)  
-              })
-            }
-          );
+          const response = await fetch(`${API_BASE_URL}/messages/restore`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              session_id: currentSession,
+              ts_to_restore: Number(msg.ts),
+              deleted_at: Number(msg.deleted_at),
+            }),
+          });
+
           
           if (!response.ok) {
             const errorData = await response.json();
@@ -428,18 +436,16 @@ async function fetchDeletedHistory(sid: string) {
           const sortedMsgs = [...msgsToRestore].sort((a, b) => a.ts - b.ts);
           
           for (const msg of sortedMsgs) {
-            const res = await fetch(
-              "https://tracechat-ai.onrender.com/messages/restore",
-              {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  session_id: sessionToRefresh,
-                  ts_to_restore: Number(msg.ts),
-                  deleted_at: Number(msg.deleted_at)
-                })
-              }
-            );
+            const res = await fetch(`${API_BASE_URL}/messages/restore`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                session_id: sessionToRefresh,
+                ts_to_restore: Number(msg.ts),
+                deleted_at: Number(msg.deleted_at),
+              }),
+            });
+
             
             if (!res.ok) {
               console.error(`⚠️ 復原失敗: ts=${msg.ts}`);
