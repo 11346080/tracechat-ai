@@ -13,7 +13,13 @@ class Settings:
         "REDIS_URL",
         "redis://localhost:6380" 
     )
-    redis_client = Redis.from_url(REDIS_URL, decode_responses=True)
+    redis_client = Redis.from_url(
+        REDIS_URL,
+        decode_responses=True,
+        # 設置套接字讀/寫超時為 60 秒
+        socket_timeout=60, 
+        socket_connect_timeout=5 
+    )
 
     
     
