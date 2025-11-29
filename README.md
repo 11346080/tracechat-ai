@@ -140,7 +140,7 @@ trackchat-ai/
 ├── .gitignore # Git 忽略規則
 └── README.md # 本檔案
 
-## 🔧 開發指南
+##  開發指南
 
 ### 後端開發
 
