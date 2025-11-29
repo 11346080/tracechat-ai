@@ -221,7 +221,4 @@ A: 可以！修改 `backend/services/ai_service.py`，將 `AzureOpenAI` 改為 `
 ### Q: Redis Stack 和普通 Redis 有什麼區別？
 A: Redis Stack 包含 RediSearch、RedisJSON 等模組，提供全文搜尋功能。普通 Redis 無法使用搜尋功能。
 
-### Q: 如何部署到生產環境？
-A: 請參考 [部署指南](docs/DEPLOYMENT.md)（TODO）
-
 
