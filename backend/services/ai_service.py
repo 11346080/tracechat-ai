@@ -2,31 +2,62 @@
 AI 對話相關的業務邏輯（Azure OpenAI）
 """
 import asyncio
-from openai import AzureOpenAI
-from config import settings
+import os
 
-# 全域客戶端（延遲初始化，避免啟動時就爆錯）
+import httpx
+from openai import AzureOpenAI
+
+from config import settings  # 從環境變數讀取設定
+
+
+# 全域客戶端
 _client: AzureOpenAI | None = None
 
 
 def get_openai_client() -> AzureOpenAI:
     """
     取得 Azure OpenAI 客戶端實例。
-    不傳任何 proxies 或額外奇怪參數，只用官方支援的欄位。
+
+    流程：
+    1. 若已初始化則直接返回。
+    2. 清除 HTTP_PROXY / HTTPS_PROXY，避免代理造成問題。
+    3. 建立不帶代理的 httpx 客戶端。
+    4. 使用 settings 中的環境變數建立 AzureOpenAI 客戶端。
     """
     global _client
     if _client is not None:
         return _client
 
-    # 這裡完全依照官方新 SDK 寫法
-    _client = AzureOpenAI(
-        azure_endpoint=settings.AZURE_OPENAI_ENDPOINT,
-        api_key=settings.AZURE_OPENAI_API_KEY,
-        api_version=settings.AZURE_OPENAI_API_VERSION,
-    )
+    # 清除可能殘留的代理設定
+    if "HTTP_PROXY" in os.environ:
+        print("DEBUG: Removing HTTP_PROXY from os.environ.")
+        del os.environ["HTTP_PROXY"]
+    if "HTTPS_PROXY" in os.environ:
+        print("DEBUG: Removing HTTPS_PROXY from os.environ.")
+        del os.environ["HTTPS_PROXY"]
+
+    # 不使用代理的 httpx 客戶端
+    safe_http_client = httpx.Client(proxies=None)
+
+    print("DEBUG: Attempting to initialize AzureOpenAI client.")
+
+    try:
+        new_client = AzureOpenAI(
+            azure_endpoint=settings.AZURE_OPENAI_ENDPOINT,
+            api_key=settings.AZURE_OPENAI_API_KEY,
+            api_version=settings.AZURE_OPENAI_API_VERSION,
+            http_client=safe_http_client,
+        )
+    except Exception as e:
+        print(f"❌ FATAL ERROR during AzureOpenAI client initialization: {e}")
+        raise
+
+    _client = new_client
+
     print("✅ Azure OpenAI client initialized.")
     print(f"   Endpoint: {settings.AZURE_OPENAI_ENDPOINT}")
     print(f"   Model: {settings.AZURE_OPENAI_MODEL}")
+
     return _client
 
 
@@ -37,7 +68,9 @@ async def get_ai_response(user_message: str) -> str:
     try:
         client = get_openai_client()
 
-        # 使用 asyncio.to_thread 包一層，避免阻塞事件 loop
+        if client is None:
+            raise RuntimeError("Azure OpenAI client failed to initialize (returned None).")
+
         completion = await asyncio.to_thread(
             client.chat.completions.create,
             model=settings.AZURE_OPENAI_MODEL,
@@ -53,5 +86,10 @@ async def get_ai_response(user_message: str) -> str:
     except Exception as e:
         error_msg = f"AI 回應失敗: {e}"
         print(f"ERROR: {error_msg}")
-        # 回傳一個友善的錯誤訊息給前端
-        return f"抱歉，AI 暫時無法回應您的問題。\n\n錯誤詳情：{e}"
+        return "抱歉，AI 暫時無法回應您的問題，請稍後再試。"
+
+
+    except Exception as e:
+        error_msg = f"AI 回應失敗: {e}"
+        print(f"ERROR: {error_msg}")
+        return "抱歉，AI 暫時無法回應您的問題，請稍後再試。"

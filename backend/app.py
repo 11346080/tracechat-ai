@@ -11,22 +11,6 @@ import asyncio
 from config import settings
 from database.redis_client import close_redis
 
-app = FastAPI()
-
-origins = [
-    "http://localhost:3000",  # 本機開發
-    "https://tracechat-ai.onrender.com",  # 若後端自己要呼叫自己可留
-    "https://tracechat-ai-git-main-11346080s-projects.vercel.app",  # 你現在的 Vercel 前端網址
-]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
 # Lifespan 管理
 async def startup_logic():
     """啟動邏輯 - 初始化 RediSearch 索引"""
@@ -34,19 +18,20 @@ async def startup_logic():
     print("🚀 全跡AI對話室 - 啟動中...")
     print("=" * 60)
     print("INFO: Attempting to ensure RediSearch index exists...")
-    
+
     try:
+        # Migrator().run 是同步操作，使用 asyncio.to_thread 避免阻塞主事件迴圈
         await asyncio.to_thread(Migrator().run)
         print("✅ RediSearch index confirmed or created successfully.")
     except Exception as e:
         print(f"❌ CRITICAL ERROR: Failed to run Redis-OM Migrator: {e}")
-        print("   Please check if Redis Stack is running and accessible.")
-    
-    print("=" * 60)
-    print("✅ Application startup complete.")
-    print("📡 WebSocket endpoint: ws://localhost:8000/ws/chat/{session_id}")
-    print("📄 API Docs: http://localhost:8000/docs")
-    print("=" * 60)
+        print("   Please check if Redis Stack is running and accessible.")
+
+        print("=" * 60)
+        print("✅ Application startup complete.")
+        print("📡 WebSocket endpoint: ws://localhost:8000/ws/chat/{session_id}")
+        print("📄 API Docs: http://localhost:8000/docs")
+        print("=" * 60)
 
 @asynccontextmanager
 async def lifespan(app_instance: FastAPI):
@@ -60,7 +45,7 @@ async def lifespan(app_instance: FastAPI):
     print("🛑 Application shutdown complete.")
     print("=" * 60)
 
-# 創建 FastAPI 應用
+# 創建 FastAPI 應用 (將 lifespan 參數傳入)
 app = FastAPI(
     title="全跡AI對話室 API",
     description="基於 Redis Stack + FastAPI + Azure OpenAI 的智能對話系統",
@@ -68,7 +53,7 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# CORS 中間件
+# CORS 中間件 (只保留這個，使用 settings.CORS_ORIGINS)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
@@ -92,16 +77,16 @@ app.include_router(websocket.router)
 async def root():
     """API 根路徑"""
     return {
-        "message": "全跡AI對話室 API",
-        "version": "1.0.0",
-        "features": [
-            "Multi-session chat management",
-            "AI-powered conversations",
-            "Full-text search",
-            "Message history tracking",
-            "Analytics & trends"
-        ],
-        "docs": "/docs"
+    "message": "全跡AI對話室 API",
+    "version": "1.0.0",
+    "features": [
+    "Multi-session chat management",
+    "AI-powered conversations",
+    "Full-text search",
+    "Message history tracking",
+    "Analytics & trends"
+    ],
+    "docs": "/docs"
     }
 
 @app.get("/health", tags=["Health"])

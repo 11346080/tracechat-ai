@@ -3,7 +3,7 @@ WebSocket 相關的路由
 """
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from services.message_service import save_message, get_message_history
-from services.ai_service import get_ai_response
+
 from database.redis_client import redis
 import json
 import time
@@ -13,6 +13,7 @@ router = APIRouter(tags=["WebSocket"])
 @router.websocket("/ws/chat/{session_id}")
 async def websocket_chat(websocket: WebSocket, session_id: str):
     """WebSocket 聊天端點"""
+    from services.ai_service import get_ai_response
     await websocket.accept()
     print(f"INFO: WebSocket connected for session: {session_id}")
     
