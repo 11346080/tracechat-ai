@@ -1,24 +1,30 @@
-"""
-WebSocket 相關的路由
-"""
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from services.message_service import save_message, get_message_history
+# backend/routes/websocket.py
 
-from database.redis_client import redis
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
+from services.message_service import save_message, get_message_history
+# 🌟 關鍵修正：導入 get_redis_client 和異步 Redis 類型
+from database.redis_client import get_redis_client
+from redis.asyncio import Redis
 import json
 import time
 
 router = APIRouter(tags=["WebSocket"])
 
 @router.websocket("/ws/chat/{session_id}")
-async def websocket_chat(websocket: WebSocket, session_id: str):
+async def websocket_chat(
+    websocket: WebSocket, 
+    session_id: str,
+    # 🌟 修正：使用 Depends 獲取異步 Redis 客戶端
+    redis_client: Redis = Depends(get_redis_client)
+):
     """WebSocket 聊天端點"""
     from services.ai_service import get_ai_response
     await websocket.accept()
     print(f"INFO: WebSocket connected for session: {session_id}")
     
     # 發送歷史訊息
-    history = await get_message_history(session_id)
+    # 關鍵修正：get_message_history 需要 redis_client 參數
+    history = await get_message_history(redis_client, session_id)
     for msg in history:
         await websocket.send_text(json.dumps(msg))
     
@@ -28,11 +34,11 @@ async def websocket_chat(websocket: WebSocket, session_id: str):
             data = json.loads(data_raw)
             
             # 儲存用戶訊息
-            await save_message(session_id, data)
+            await save_message(redis_client, session_id, data) # 傳遞 redis_client
             await websocket.send_text(json.dumps(data))
             
             # Stream 記錄
-            await redis.xadd("chat_stream", fields={
+            await redis_client.xadd("chat_stream", fields={ # 使用 redis_client
                 "session_id": session_id,
                 "sender": data["sender"],
                 "content": data["content"],
@@ -50,11 +56,11 @@ async def websocket_chat(websocket: WebSocket, session_id: str):
                     "ts": int(time.time() * 1000)
                 }
                 
-                await save_message(session_id, ai_msg)
+                await save_message(redis_client, session_id, ai_msg) # 傳遞 redis_client
                 await websocket.send_text(json.dumps(ai_msg))
                 
                 # Stream 記錄
-                await redis.xadd("chat_stream", fields={
+                await redis_client.xadd("chat_stream", fields={ # 使用 redis_client
                     "session_id": session_id,
                     "sender": "AI",
                     "content": ai_response_content,

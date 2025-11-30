@@ -108,12 +108,26 @@ async function fetchDeletedHistory(sid: string) {
 
   // === 數據操作/API 處理函數 ===
 
-  // 載入會話列表
-  useEffect(() => {
-    fetch(`${API_BASE_URL}/sessions`)
-      .then(res => res.json())
-      .then(data => setSessions(data.sessions));
-  }, []);
+  // //入會話列表
+  // useEffect(() => {
+  //   fetch(`${API_BASE_URL}/sessions`)
+  //     .then(res => res.json())
+  //     .then(data => setSessions(data.sessions));
+  // }, []);
+  // 新增會話
+  async function handleAddSession() {
+    if (!newSessionName.trim()) return;
+    const sessionName = newSessionName.trim();
+
+    await fetch(`${API_BASE_URL}/sessions/${encodeURIComponent(sessionName)}`, {
+      method: "POST",
+    });
+
+    setNewSessionName("");
+    setSessions(prev => [...(prev || []), sessionName]);
+    setCurrentSession(sessionName);
+  }
+
 
   // 載入小時趨勢
   async function loadHourlyTrend() {
@@ -175,7 +189,7 @@ async function fetchDeletedHistory(sid: string) {
       
       setMessages(msgs => {
         if (msgs.some(m => m.ts === data.ts && m.content === data.content && m.sender === data.sender)) return msgs;
-        return [...msgs, data];
+        return [...(msgs || []), data];
       });
     };
     
@@ -192,16 +206,18 @@ async function fetchDeletedHistory(sid: string) {
   }, [messages, isAITyping]);
 
   // 新增會話
-  async function handleAddSession() {
-    if (!newSessionName.trim()) return;
-    const sessionName = newSessionName.trim();
-    await fetch(`${API_BASE_URL}/sessions/${encodeURIComponent(sessionName)}`, {
-      method: "POST",
-    });
-    setNewSessionName("");
-    setSessions(prev => [...prev, sessionName]);
-    setCurrentSession(sessionName);
-  }
+    useEffect(() => {
+    fetch(`${API_BASE_URL}/sessions/`)
+      .then(res => res.json())
+      .then((data) => {
+        // data 形狀是 [{ session_id, title, created_at, message_count }, ...]
+        setSessions(data.map((s: { session_id: string }) => s.session_id));
+      })
+      .catch(err => {
+        console.error("載入會話列表失敗:", err);
+        setSessions([]);
+      });
+  }, []);
 
   // 詢問刪除會話
   function askDeleteSession(sid: string) {
@@ -503,7 +519,11 @@ async function fetchDeletedHistory(sid: string) {
       {/* 左側聊天室 */}
       <main className={styles.mainContent}>
         {/* 頂部標題列 */}
-        <header className={styles.header}>
+        <header
+          className={styles.header}
+          onClick={() => setCurrentSession(null)}
+          style={{ cursor: "pointer" }}
+        >
           {currentSession ? `會話：${currentSession}` : "🤖全跡AI對話室"}
         </header>
 
@@ -562,7 +582,8 @@ async function fetchDeletedHistory(sid: string) {
                   {messages.map((m, i) => {
                     const prevMessage = i > 0 ? messages[i - 1] : null;
                     const isDifferentSender = prevMessage && prevMessage.sender !== m.sender;
-                    
+                    const isAI = typeof m.sender === "string" && m.sender.toLowerCase() === "ai";
+
                     return (
                       <div
                         key={`${m.ts}-${i}`}
@@ -577,12 +598,12 @@ async function fetchDeletedHistory(sid: string) {
                           />
                         )}
 
-                        <div className={m.sender === "AI" ? styles.messageContentAI : styles.messageContentMe}>
-                          <div className={m.sender === "AI" ? styles.senderLabelAI : styles.senderLabelMe}>
-                            {m.sender === "AI" ? "🤖 AI 助手" : "👤 我"}
+                        <div className={isAI ? styles.messageContentAI : styles.messageContentMe}>
+                          <div className={isAI ? styles.senderLabelAI : styles.senderLabelMe}>
+                            {isAI ? "🤖 AI 助手" : "👤 我"}
                           </div>
 
-                          <div className={m.sender === "AI" ? styles.messageBubbleAI : styles.messageBubbleMe}>
+                          <div className={isAI ? styles.messageBubbleAI : styles.messageBubbleMe}>
                             <div className={styles.messageText}>
                               <Markdown content={m.content} />
                             </div>
@@ -591,6 +612,7 @@ async function fetchDeletedHistory(sid: string) {
                       </div>
                     );
                   })}
+
 
                   {/* Loading 動畫 */}
                   {isAITyping && (

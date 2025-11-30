@@ -145,7 +145,7 @@ export default function Sidebar({
 
       {/* 會話列表 */}
       <div style={{ marginBottom: 24 }}>
-        {sessions.map(sid => (
+        {(sessions || []).map(sid => (
           <div
             key={sid}
             style={{
@@ -265,7 +265,7 @@ export default function Sidebar({
         
         {/* 搜尋結果顯示或查無資料提示 */}
         {searchResults.length > 0 ? (
-          searchResults.map(sid => (
+          (searchResults || []).map(sid => (
             <div
               key={sid}
               onClick={() => jumpToSession(sid)}

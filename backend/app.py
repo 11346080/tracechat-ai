@@ -7,9 +7,8 @@ from contextlib import asynccontextmanager
 from redis_om import Migrator
 import asyncio
 
-# 先導入 config 和 database
+# 先導入 config 
 from config import settings
-from database.redis_client import close_redis
 
 # Lifespan 管理
 async def startup_logic():
@@ -25,13 +24,13 @@ async def startup_logic():
         print("✅ RediSearch index confirmed or created successfully.")
     except Exception as e:
         print(f"❌ CRITICAL ERROR: Failed to run Redis-OM Migrator: {e}")
-        print("   Please check if Redis Stack is running and accessible.")
+        print("   請檢查您的 Upstash 連線 URL (必須是 rediss://) 是否正確，或連線是否超時。")
 
-        print("=" * 60)
-        print("✅ Application startup complete.")
-        print("📡 WebSocket endpoint: ws://localhost:8000/ws/chat/{session_id}")
-        print("📄 API Docs: http://localhost:8000/docs")
-        print("=" * 60)
+    print("=" * 60)
+    print("✅ Application startup complete.")
+    print("📡 WebSocket endpoint: ws://localhost:8000/ws/chat/{session_id}")
+    print("📄 API Docs: http://localhost:8000/docs")
+    print("=" * 60)
 
 @asynccontextmanager
 async def lifespan(app_instance: FastAPI):
@@ -40,7 +39,7 @@ async def lifespan(app_instance: FastAPI):
     await startup_logic()
     yield
     # 關閉
-    await close_redis()
+    # await close_redis() # ❌ 移除這個調用，讓 Redis 連線池自動關閉和清理資源
     print("=" * 60)
     print("🛑 Application shutdown complete.")
     print("=" * 60)

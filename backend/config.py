@@ -1,9 +1,7 @@
-"""
-配置檔案 - 集中管理所有配置參數
-"""
+# backend/config.py
 import os
 from dotenv import load_dotenv
-from redis import Redis
+from redis import Redis # 專門用於 Migrator 的同步客戶端
 
 load_dotenv()
 
@@ -11,17 +9,10 @@ class Settings:
     # Redis 配置
     REDIS_URL: str = os.getenv(
         "REDIS_URL",
-        "redis://localhost:6380" 
+        "rediss://default:AYVPAAIncDJhYjFkMGQ2OTkzN2Y0ODM5YmQ4Y2MwZDcxYzAyNzUzMnAyMzQxMjc@darling-mole-34127.upstash.io:6379" 
     )
-    redis_client = Redis.from_url(
-        REDIS_URL,
-        decode_responses=True,
-        # 設置套接字讀/寫超時為 60 秒
-        socket_timeout=60, 
-        socket_connect_timeout=5 
-    )
-
     
+    # 這裡不再預先實例化異步客戶端
     
     # Azure OpenAI 配置
     AZURE_OPENAI_ENDPOINT: str = os.getenv("AZURE_OPENAI_ENDPOINT", "https://your-resource-name.openai.azure.com/")
@@ -37,3 +28,12 @@ class Settings:
     CORS_ORIGINS: list = ["*"]
 
 settings = Settings()
+
+# 關鍵修正：在 settings 初始化後，使用同步 Redis 客戶端進行綁定 (供 Redis-OM Migrator 使用)
+try:
+    # 這裡使用同步的 `redis` 庫
+    settings.redis_client = Redis.from_url(settings.REDIS_URL, decode_responses=True)
+    print("INFO: Synchronous Redis client for Migrator initialized successfully.")
+except Exception as e:
+    print(f"CRITICAL ERROR: Failed to initialize SYNCHRONOUS Redis Client for Migrator: {e}")
+    raise
