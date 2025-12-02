@@ -218,7 +218,5 @@ npm start
 ### Q: 沒有 Azure OpenAI，可以用 OpenAI API 嗎？
 A: 可以！修改 `backend/services/ai_service.py`，將 `AzureOpenAI` 改為 `OpenAI` 即可。
 
-### Q: Redis Stack 和普通 Redis 有什麼區別？
-A: Redis Stack 包含 RediSearch、RedisJSON 等模組，提供全文搜尋功能。普通 Redis 無法使用搜尋功能。
 
 
