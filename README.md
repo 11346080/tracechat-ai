@@ -38,7 +38,7 @@
 - Redis Stack 7.0+
 - Azure OpenAI API Key
 
-##  快速開始
+##  快速開始(本地端）
 
 ### 1. Clone 專案
 - git clone https://github.com/yourusername/trackchat-ai.git
@@ -194,8 +194,6 @@ npm start
 
 ### 2. 全文搜尋
 - RediSearch 毫秒級搜尋
-- 支援中文分詞
-- 聚合統計
 
 ### 3. 實時分析
 - WebSocket 實時推送
