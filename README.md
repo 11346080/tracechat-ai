@@ -118,27 +118,28 @@ redis/redis-stack:latest
 3. 在「金鑰和端點」頁面複製 API Key
 
 ##  專案結構
-
+```
 trackchat-ai/
-├── backend/ # 後端程式
-│ ├── app.py # 主應用程式
-│ ├── config.py # 配置管理
-│ ├── requirements.txt # Python 依賴
-│ ├── .env.example # 環境變數範本
-│ ├── models/ # 數據模型
-│ ├── services/ # 業務邏輯
-│ ├── routes/ # API 路由
-│ ├── database/ # 數據庫連接
-│ └── utils/ # 工具函數
-├── frontend/ # 前端程式
-│ ├── pages/ # 頁面
-│ ├── components/ # 組件
-│ ├── styles/ # 樣式
-│ ├── types/ # TypeScript 類型
-│ └── package.json # Node 依賴
-├── docs/ # 文檔
-├── .gitignore # Git 忽略規則
-└── README.md # 本檔案
+├── backend/              # 後端程式
+│   ├── app.py            # 主應用程式
+│   ├── config.py         # 配置管理
+│   ├── requirements.txt  # Python 依賴
+│   ├── .env.example      # 環境變數範本
+│   ├── models/           # 數據模型
+│   ├── services/         # 業務邏輯
+│   ├── routes/           # API 路由
+│   ├── database/         # 數據庫連接
+│   └── utils/            # 工具函數
+├── frontend/             # 前端程式
+│   ├── pages/            # 頁面
+│   ├── components/       # 組件
+│   ├── styles/           # 樣式
+│   ├── types/            # TypeScript 類型
+│   └── package.json      # Node 依賴
+├── docs/                 # 文檔
+├── .gitignore            # Git 忽略規則
+└── README.md             # 本檔案
+```
 
 ##  開發指南
 
