@@ -100,7 +100,7 @@ async def create_session(redis_client: redis.Redis, session_id: str):
     # 2. 準備 AI 歡迎訊息
     ai_welcome_message: Dict[str, Any] = {
         "session_id": session_id,
-        "sender": "aAI", 
+        "sender": "AI", 
         "content": "你好！我是 AI 助手，很高興為您服務。請問有什麼可以協助您的嗎？",
         "ts": int(time.time() * 1000) # 使用毫秒時間戳
     }

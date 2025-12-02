@@ -2,7 +2,6 @@
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
 from services.message_service import save_message, get_message_history
-# 🌟 關鍵修正：導入 get_redis_client 和異步 Redis 類型
 from database.redis_client import get_redis_client
 from redis.asyncio import Redis
 import json

@@ -10,7 +10,6 @@ import {
 } from 'chart.js';
 import Head from 'next/head';
 
-
 // 註冊 ChartJS 元素 (僅須在主檔案註冊一次就好了!!)
 ChartJS.register(
   CategoryScale,
